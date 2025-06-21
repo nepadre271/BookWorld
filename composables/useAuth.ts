@@ -14,7 +14,6 @@ export function useAuth() {
   const router = useRouter()
 
   const fetchProfile = async (jwtToken: string): Promise<User> => {
-    // Запрос профиля, вернет объект с user
     const res = await $fetch<{ user: User }>('/api/profile', {
       headers: {
         Authorization: `Bearer ${jwtToken}`
@@ -34,6 +33,7 @@ export function useAuth() {
       localStorage.setItem('token', res.token)
 
       user.value = await fetchProfile(res.token)
+      console.log('Пользователь после логина:', user.value)
       router.push('/')
     } catch (err) {
       alert('Login failed')
@@ -64,5 +64,19 @@ export function useAuth() {
 
   const isAuthenticated = () => !!token.value
 
-  return { user, token, login, register, logout, isAuthenticated }
+  const auth = { user, token, login, register, logout, isAuthenticated }
+
+  // После return вызываем fetchProfile, если есть токен, но профиль еще не загружен
+  if (process.client && token.value && !user.value) {
+    fetchProfile(token.value)
+      .then((u) => {
+        user.value = u
+      })
+      .catch(() => {
+        token.value = null
+        localStorage.removeItem('token')
+      })
+  }
+
+  return auth
 }

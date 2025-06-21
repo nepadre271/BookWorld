@@ -52,3 +52,16 @@
       </div></header>
   </header>
 </template>
+
+<script setup>
+import { useAuth } from '~/composables/useAuth'
+
+const { user } = useAuth()
+
+watchEffect(() => {
+  if (user.value) {
+    console.log('Текущий пользователь:', user.value)
+  }
+})
+</script>
+
